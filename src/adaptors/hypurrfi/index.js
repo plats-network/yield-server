@@ -3,20 +3,22 @@ const sdk = require('@defillama/sdk');
 const poolAbi = require('./poolAbi');
 
 const chain = 'hyperliquid';
-const HYPERLEND_DATA_PROVIDER = "0x5481bf8d3946E6A3168640c1D7523eB59F055a29";
+const HYPEURRFI_DATA_PROVIDER = "0x895C799a5bbdCb63B80bEE5BD94E7b9138D977d6";
 
 const STABLECOIN = [
     "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34", // USDe
     "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb", // USD₮0
     "0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2", // sUSDe
     "0xb50A96253aBDF803D85efcDce07Ad8becBc52BD5", // USDHL
-    "0x0aD339d66BF4AeD5ce31c64Bc37B3244b6394A77"  // USR
+    "0x02c6a2fA58cC01A18B8D9E00eA48d65E4dF26c70", // feUSD
+    "0xca79db4B49f608eF54a5CB813FbEd3a6387bC645" // USDXL
 ];
 
 const uBASE = [
     "0x5555555555555555555555555555555555555555", // WHYPE
     "0x9FDBdA0A5e284c32744D2f17Ee5c74B284993463", // UBTC
-    "0xBe6727B535545C67d5cAa73dEa54865B92CF7907"  // UETH
+    "0xBe6727B535545C67d5cAa73dEa54865B92CF7907", // UETH
+    "0xBe6727B535545C67d5cAa73dEa54865B92CF7907"  // USOL
 ];
 
 function calTotal(start, n, ltv) {
@@ -29,7 +31,7 @@ function calTotal(start, n, ltv) {
 
 const getApy = async () => {
     try {
-        const protocolDataProvider = HYPERLEND_DATA_PROVIDER;
+        const protocolDataProvider = HYPEURRFI_DATA_PROVIDER;
         
         const reserveTokens = (
             await sdk.api.abi.call({
@@ -157,7 +159,7 @@ const getApy = async () => {
                 return {
                     pool: `${aTokens[i].tokenAddress}-${chain}`.toLowerCase(),
                     chain,
-                    project: 'hyperlend', 
+                    project: 'hypurrfi',
                     symbol: pool.symbol,
                     tvlUsd,
                     apyBase: calculatedAPY * 100,
@@ -166,9 +168,9 @@ const getApy = async () => {
                     totalBorrowUsd,
                     apyBaseBorrow: variableBorrowRate * 100,
                     ltv: ltvRatio,
-                    url: `https://app.hyperlend.finance/markets/${pool.tokenAddress}`,
+                    url: `https://app.hypurr.fi/markets/pooled/999/${pool.tokenAddress}`,
                     borrowable: configData.borrowingEnabled,
-                    poolMeta: 'hyperlend lending pool',
+                    poolMeta: 'hypurrfi lending pool',
                 };
             })
             .filter((i) => Boolean(i));
