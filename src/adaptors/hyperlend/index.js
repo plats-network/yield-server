@@ -1,11 +1,8 @@
 const axios = require('axios');
 const sdk = require('@defillama/sdk');
-
-const utils = require('../utils');
-const abi = require('./abi.json');
+const poolAbi = require('./poolAbi');
 
 const chain = 'hyperliquid';
-
 const HYPERLEND_DATA_PROVIDER = "0x5481bf8d3946E6A3168640c1D7523eB59F055a29";
 
 const STABLECOIN = [
@@ -20,7 +17,7 @@ const uBASE = [
     "0x5555555555555555555555555555555555555555", // WHYPE
     "0x9FDBdA0A5e284c32744D2f17Ee5c74B284993463", // UBTC
     "0xBe6727B535545C67d5cAa73dEa54865B92CF7907"  // UETH
-]
+];
 
 function calTotal(start, n, ltv) {
     let sum = 0;
@@ -30,126 +27,158 @@ function calTotal(start, n, ltv) {
     return sum;
 }
 
-async function get_lvt(tokenAddress) {
-  const response = await sdk.api.abi.call({
-    target: HYPERLEND_DATA_PROVIDER,
-    abi: abi.getReserveConfigurationData,
-    params: [tokenAddress],
-    chain,  
-  });
-
-  return Number(response.output[1]); 
-}
-
-async function apy_stablecoin() {
-    const apys = [];
-    const maxLiquidityRate = 0.63; // example value
-    const minBorrowRate = 0.99; // example value
-    for (let i = 0; i < STABLECOIN.length; i++) {
-        const ltv = await get_lvt(STABLECOIN[i]);
-        const apy = await calc_apy_stablecoin(ltv, 5, maxLiquidityRate, minBorrowRate);
-        apys.push(apy);
-    }
-
-    return apys;
-}
-
-async function calc_apy_stablecoin(ltv, n, maxLiquidityRate, minBorrowRate) {
-    const ltvRatio = ltv / 10000;
-    const sumLtvPow = calTotal(0, n, ltvRatio);
-    const sumLtvPow1 = calTotal(1, n, ltvRatio);
-
-    const apy = maxLiquidityRate * sumLtvPow - minBorrowRate * sumLtvPow1;
-
-    return apy;
-}
-
-async function apy_uBase() {
-    const apys = [];
-    const maxLiquidityRate = 0.63; // example value
-    const minBorrowRate = 0.99; // example value
-    for (let i = 0; i < uBASE.length; i++) {
-        const ltv = await get_lvt(uBASE[i]);
-        const apy = await calc_apy_stablecoin(ltv, 5, maxLiquidityRate, minBorrowRate);
-        apys.push(apy);
-    }
-
-    return apys;
-}
-
-async function getReverseData(dataProviderAddress) {
-    const assets = []; 
-    for (const asset of assets) {
-        const result = await sdk.api.abi.call({
-            target: dataProviderAddress,
-            abi: abi.getReserveData,
-            params: [asset.tokenAddress],
-            chain,
-        });
-
-        const reserveData = result.output;
-        asset.reserveData = {
-            unbacked: reserveData[0] ? Number(reserveData[0]) / 1e18 : 0,
-            accruedToTreasuryScaled: reserveData[1] ? Number(reserveData[1]) / 1e18 : 0,
-            totalAToken: reserveData[2] ? Number(reserveData[2]) / 1e18 : 0,
-            totalStableDebt: reserveData[3] ? Number(reserveData[3]) / 1e18 : 0,
-            totalVariableDebt: reserveData[4] ? Number(reserveData[4]) / 1e18 : 0,
-            liquidityRate: reserveData[5] ? Number(BigInt(reserveData[5]) / (BigInt(10) ** BigInt(18))) / 1e9 * 1e2 : 0,
-            variableBorrowRate: reserveData[6] ? Number(BigInt(reserveData[6]) / (BigInt(10) ** BigInt(18))) / 1e9 * 1e2 : 0,
-            stableBorrowRate: reserveData[7] ? Number(BigInt(reserveData[7]) / (BigInt(10) ** BigInt(18))) / 1e9 * 1e2 : 0,
-            averageStableBorrowRate: reserveData[8] ? Number(BigInt(reserveData[8]) / (BigInt(10) ** BigInt(18))) / 1e9 * 1e2 : 0,
-            liquidityIndex: reserveData[9] ? Number(reserveData[9]) / 1e27 : 0,
-            variableBorrowIndex: reserveData[10] ? Number(reserveData[10]) / 1e27 : 0,
-            lastUpdateTimestamp: reserveData[11] ? Number(reserveData[11]) : 0
-        };
-    }
-
-    return assets;
-}
-
-async function calc_apy_uBase(ltv, n, liquidityRate, borrowRate) {
-    const ltvRatio = ltv / 10000;
-    const sumLtvPow = calTotal(0, n, ltvRatio);
-    const sumLtvPow1 = calTotal(1, n, ltvRatio);
-
-    const apy = liquidityRate * sumLtvPow - borrowRate * sumLtvPow1;
-
-    return apy;
-}
-
-async function getAPY() {
+const getApy = async () => {
     try {
-        const pools = [];
+        const protocolDataProvider = HYPERLEND_DATA_PROVIDER;
         
-        const stablecoinAPYs = await apy_stablecoin();
-        for (let i = 0; i < STABLECOIN.length; i++) {
-            pools.push({
-                pool: STABLECOIN[i],
-                chain: chain,
-                project: 'hyperlend',
-                symbol: `STABLECOIN-${i}`,
-                apy: stablecoinAPYs[i] * 100, 
-            });
-        }
+        const reserveTokens = (
+            await sdk.api.abi.call({
+                target: protocolDataProvider,
+                abi: poolAbi.find(f => f.name === 'getAllReservesTokens'),
+                chain,
+            })
+        ).output;
+        
+        console.log('Reserve tokens:', reserveTokens);
 
-        const uBaseAPYs = await apy_uBase();
-        for (let i = 0; i < uBASE.length; i++) {
-            pools.push({
-                pool: uBASE[i],
-                chain: chain,
-                project: 'hyperlend',
-                symbol: `UBASE-${i}`,
-                apy: uBaseAPYs[i] * 100, 
-            });
-        }
+        const aTokens = (
+            await sdk.api.abi.call({
+                target: protocolDataProvider,
+                abi: poolAbi.find(f => f.name === 'getAllATokens'),
+                chain,
+            })
+        ).output;
+        
+        const poolsReserveData = (
+            await sdk.api.abi.multiCall({
+                calls: reserveTokens.map((p) => ({
+                    target: protocolDataProvider,
+                    params: p.tokenAddress,
+                })),
+                abi: poolAbi.find(f => f.name === 'getReserveData'),
+                chain,
+            })
+        ).output.map((o) => o.output);
 
-        return pools;
+        const poolsReservesConfigurationData = (
+            await sdk.api.abi.multiCall({
+                calls: reserveTokens.map((p) => ({
+                    target: protocolDataProvider,
+                    params: p.tokenAddress,
+                })),
+                abi: poolAbi.find(f => f.name === 'getReserveConfigurationData'),
+                chain,
+            })
+        ).output.map((o) => o.output);
+
+        const totalSupply = (
+            await sdk.api.abi.multiCall({
+                chain,
+                abi: 'erc20:totalSupply',
+                calls: aTokens.map((t) => ({
+                    target: t.tokenAddress,
+                })),
+            })
+        ).output.map((o) => o.output);
+
+        const underlyingBalances = (
+            await sdk.api.abi.multiCall({
+                chain,
+                abi: 'erc20:balanceOf',
+                calls: aTokens.map((t, i) => ({
+                    target: reserveTokens[i].tokenAddress,
+                    params: [t.tokenAddress],
+                })),
+            })
+        ).output.map((o) => o.output);
+
+        const underlyingDecimals = (
+            await sdk.api.abi.multiCall({
+                chain,
+                abi: 'erc20:decimals',
+                calls: aTokens.map((t) => ({
+                    target: t.tokenAddress,
+                })),
+            })
+        ).output.map((o) => o.output);
+
+        const priceKeys = reserveTokens
+            .map((t) => `${chain}:${t.tokenAddress}`)
+            .join(',');
+        const prices = (
+            await axios.get(`https://coins.llama.fi/prices/current/${priceKeys}`)
+        ).data.coins;
+
+        console.log('Prices:', prices);
+
+        return reserveTokens
+            .map((pool, i) => {
+                const frozen = poolsReservesConfigurationData[i].isFrozen;
+                if (frozen) return null;
+
+                const p = poolsReserveData[i];
+                const configData = poolsReservesConfigurationData[i];
+                const price = prices[`${chain}:${pool.tokenAddress}`]?.price;
+
+                if (!price) {
+                    console.log(`No price for ${pool.tokenAddress}`);
+                    return null;
+                }
+
+                const supply = totalSupply[i];
+                const totalSupplyUsd = (supply / 10 ** underlyingDecimals[i]) * price;
+
+                const currentSupply = underlyingBalances[i];
+                const tvlUsd = (currentSupply / 10 ** underlyingDecimals[i]) * price;
+                const totalBorrowUsd = totalSupplyUsd - tvlUsd;
+
+                const ltv = Number(configData.ltv);
+                const liquidityRate = Number(p.liquidityRate) / 10 ** 27;
+                const variableBorrowRate = Number(p.variableBorrowRate) / 10 ** 27;
+                
+                const ltvRatio = ltv / 10000;
+                const n = 5;
+                const sumLtvPow = calTotal(0, n, ltvRatio);
+                const sumLtvPow1 = calTotal(1, n, ltvRatio);
+                
+                let calculatedAPY;
+                
+                if (STABLECOIN.includes(pool.tokenAddress)) {
+                    // CURRENT HARD FIXED
+                    const maxLiquidityRate = 0.63;
+                    const minBorrowRate = 0.99;
+                    calculatedAPY = maxLiquidityRate * sumLtvPow - minBorrowRate * sumLtvPow1;
+                } else if (uBASE.includes(pool.tokenAddress)) {
+                    calculatedAPY = liquidityRate * sumLtvPow - variableBorrowRate * sumLtvPow1;
+                } else {
+                    calculatedAPY = liquidityRate * sumLtvPow - variableBorrowRate * sumLtvPow1;
+                }
+
+                return {
+                    pool: `${aTokens[i].tokenAddress}-${chain}`.toLowerCase(),
+                    chain,
+                    project: 'hyperlend',
+                    symbol: pool.symbol,
+                    tvlUsd,
+                    apyBase: calculatedAPY * 100,
+                    underlyingTokens: [pool.tokenAddress],
+                    totalSupplyUsd,
+                    totalBorrowUsd,
+                    apyBaseBorrow: variableBorrowRate * 100,
+                    ltv: ltvRatio,
+                    url: 'https://hyperlend.finance',
+                    borrowable: configData.borrowingEnabled,
+                    poolMeta: 'HyperLend lending pool',
+                };
+            })
+            .filter((i) => Boolean(i));
     } catch (error) {
-        console.error('Error in getAPY:', error);
+        console.error('Error in getApy:', error);
         return [];
     }
-}
+};
 
 module.exports = {
-    apy: getAPY,
+    timetravel: false,
+    apy: getApy,
 };
