@@ -1,0 +1,185 @@
+[
+  {
+    "inputs": [
+      { "name": "poolId", "type": "uint256" },
+      { "name": "asset", "type": "address" }
+    ],
+    "name": "ltvFor",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" } ],
+    "name": "getTotalAssets",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" } ],
+    "name": "getTotalBorrows",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" } ],
+    "name": "getLiquidityOf",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getTotalAssets",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getTotalBorrows",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getLiquidityOf",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getPoolAssetFor",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          },
+          {
+            "name": "guy",
+            "type": "address"
+          }
+        ],
+        "name": "getAssetsOf",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "poolId",
+            "type": "uint256"
+          },
+          {
+            "name": "position",
+            "type": "address"
+          }
+        ],
+        "name": "getBorrowsOf",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" } ],
+    "name": "getPoolAssetFor",
+    "outputs": [ { "name": "", "type": "address" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" }, { "name": "guy", "type": "address" } ],
+    "name": "getAssetsOf",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" }, { "name": "position", "type": "address" } ],
+    "name": "getBorrowsOf",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "name": "poolId", "type": "uint256" }, { "name": "position", "type": "address" } ],
+    "name": "borrowSharesOf",
+    "outputs": [ { "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "poolId", "type": "uint256" }],
+    "name": "getPoolSupplyRate",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "poolId", "type": "uint256" }],
+    "name": "getPoolBorrowRate",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

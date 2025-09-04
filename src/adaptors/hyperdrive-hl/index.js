@@ -86,6 +86,22 @@ const getMarketQuery = async (marketId) => {
     }
 };
 
+const getMarket = async(marketId) => {
+    try {
+        const result = await sdk.api.abi.call({
+            target: HYPERDRIVE_MARKET_FACTORY,
+            params: [marketId],
+            abi: marketAbi.find(f => f.name === 'getMarket'),
+            chain,
+        });
+
+        return result.output;
+    } catch (error) {
+        console.error(`Error getting market query for ID ${marketId}:`, error);
+        return null;
+    }
+}
+
 const getMarketType = (marketAddress) => {
     if (MARKET_CONFIGS.STABLECOIN.addresses.includes(marketAddress)) {
         return 'STABLECOIN';
@@ -117,13 +133,13 @@ const calculateUBaseAPY = (marketData) => {
     return (supplyRate * sumLtvPow - borrowRate * sumLtvPow1) * PERCENTAGE_MULTIPLIER;
 };
 
-const createPoolObject = async (marketData, marketType, marketAddress) => {
+const createPoolObject = async (marketData, marketType, marketAddress, poolAddress) => {
     const config = MARKET_CONFIGS[marketType];
     const tokenPrice = await getTokenPrice(marketAddress);
     const ltv = marketData.totalLiabilities / marketData.totalAssets || 0;
 
     const basePool = {
-        pool: `${marketAddress}-${chain}`.toLowerCase(),
+        pool: `${poolAddress}-${chain}`.toLowerCase(),
         chain,
         project: 'hyperdrive-hl',
         symbol: marketData.marketAssetSymbol || 'Unknown',
@@ -174,7 +190,8 @@ const getApy = async () => {
                     continue;
                 }
 
-                const pool = await createPoolObject(marketData, marketType, marketAddress);
+                const poolAddress = await getMarket(i);
+                const pool = await createPoolObject(marketData, marketType, marketAddress, poolAddress);
                 if (pool) {
                     pools.push(pool);
                 }
